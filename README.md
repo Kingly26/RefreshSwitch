@@ -1,15 +1,26 @@
 # RefreshSwitch
 
-App per la tray di Windows per cambiare la frequenza di aggiornamento (Hz) di tutti i monitor.
+English | [Italiano](README.it.md)
 
-- **Clic sinistro**: passa alla frequenza successiva su tutti i monitor
-- **Clic destro**: scegli una frequenza per tutti i monitor o per un singolo monitor, avvio con Windows, Esci
-- L'icona mostra gli Hz del monitor principale; il tooltip elenca tutti i monitor
-- Non richiede privilegi di amministratore
+A Windows tray app to change the refresh rate (Hz) of all your monitors, and to turn monitors off without unplugging them.
 
-Se un monitor non supporta la frequenza richiesta, usa la più vicina tra quelle disponibili alla sua risoluzione attuale.
+- **Left-click** the tray icon: switch to the next refresh rate on all monitors
+- **Right-click**: pick a rate for all monitors or for a single monitor, turn screens off, disable/re-enable a monitor, Start with Windows, Exit
+- The icon shows the Hz of the primary monitor; the tooltip lists all monitors
+- Monitors are shown with their real model name, plus the display number
+- No administrator rights required
+- The UI language follows Windows (Italian or English)
 
-## Compilazione
+If a monitor does not support the requested rate, the closest one available at its current resolution is used.
+
+## Turning monitors off
+
+- **Turn screens off**: puts all monitors in standby; moving the mouse or pressing a key wakes them.
+- **Disable [monitor]**: detaches the monitor from the desktop, like unplugging the cable (windows move to the other screens). Use **Re-enable [monitor]** to bring it back; its position, resolution and refresh rate are saved and restored. The last active monitor cannot be disabled.
+
+Errors are logged to `%LOCALAPPDATA%\RefreshSwitch\error.log`.
+
+## Build
 
 ```
 C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -out:RefreshSwitch.exe -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Management.dll RefreshSwitch.cs

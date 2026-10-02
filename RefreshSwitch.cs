@@ -117,7 +117,7 @@ class Monitor
                 if (parts.Length > 1) names.TryGetValue(parts[1].ToUpperInvariant(), out friendly);
             }
             string num = dd.DeviceName.StartsWith("\\\\.\\") ? dd.DeviceName.Substring(4) : dd.DeviceName;
-            m.Name = (string.IsNullOrEmpty(friendly) ? baseName : friendly) + " [" + num.Replace("DISPLAY", "Schermo ") + "]";
+            m.Name = (string.IsNullOrEmpty(friendly) ? baseName : friendly) + " [" + num.Replace("DISPLAY", Lang.T("Schermo ", "Display ")) + "]";
             if (!attached)
             {
                 // detached output: list it only if a monitor is still connected or we saved its mode
@@ -204,6 +204,12 @@ class Monitor
     }
 }
 
+static class Lang
+{
+    static readonly bool It = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "it";
+    public static string T(string it, string en) { return It ? it : en; }
+}
+
 class App : ApplicationContext
 {
     NotifyIcon tray = new NotifyIcon();
@@ -221,8 +227,8 @@ class App : ApplicationContext
             {
                 Log(ex);
                 tray.ContextMenuStrip.Items.Clear();
-                tray.ContextMenuStrip.Items.Add("Errore: " + ex.Message);
-                tray.ContextMenuStrip.Items.Add("Esci", null, (s2, e2) => { tray.Visible = false; Application.Exit(); });
+                tray.ContextMenuStrip.Items.Add(Lang.T("Errore: ", "Error: ") + ex.Message);
+                tray.ContextMenuStrip.Items.Add(Lang.T("Esci", "Exit"), null, (s2, e2) => { tray.Visible = false; Application.Exit(); });
             }
         };
         tray.MouseClick += (s, e) => { if (e.Button == MouseButtons.Left) Cycle(); };
@@ -244,7 +250,7 @@ class App : ApplicationContext
     {
         bool ok = true;
         foreach (var m in Monitor.All()) if (m.Active) ok &= m.Apply(rate);
-        if (!ok) tray.ShowBalloonTip(3000, "RefreshSwitch", "Alcuni monitor non hanno accettato la frequenza.", ToolTipIcon.Warning);
+        if (!ok) tray.ShowBalloonTip(3000, "RefreshSwitch", Lang.T("Alcuni monitor non hanno accettato la frequenza.", "Some monitors did not accept the refresh rate."), ToolTipIcon.Warning);
         Refresh();
     }
 
@@ -303,16 +309,16 @@ class App : ApplicationContext
         m.Items.Clear();
         var mons = Monitor.All();
         var all = Union(mons);
-        m.Items.Add("Cambia frequenza (tutti)", null, (s, e) => Cycle());
+        m.Items.Add(Lang.T("Cambia frequenza (tutti)", "Change refresh rate (all)"), null, (s, e) => Cycle());
         m.Items.Add(new ToolStripSeparator());
-        var allMenu = new ToolStripMenuItem("Tutti i monitor");
+        var allMenu = new ToolStripMenuItem(Lang.T("Tutti i monitor", "All monitors"));
         foreach (var r in all) { uint rr = r; allMenu.DropDownItems.Add(rr + " Hz", null, (s, e) => SetAll(rr)); }
         m.Items.Add(allMenu);
         foreach (var mon in mons)
         {
             var mm = mon;
             if (!mm.Active) continue;
-            var sub = new ToolStripMenuItem(mm.Name + (mm.Primary ? " (principale)" : "") + " - " + mm.Current + " Hz");
+            var sub = new ToolStripMenuItem(mm.Name + (mm.Primary ? Lang.T(" (principale)", " (primary)") : "") + " - " + mm.Current + " Hz");
             foreach (var r in mm.Rates)
             {
                 uint rr = r;
@@ -324,24 +330,24 @@ class App : ApplicationContext
             m.Items.Add(sub);
         }
         m.Items.Add(new ToolStripSeparator());
-        m.Items.Add("Spegni schermi (standby, il mouse li riaccende)", null, (s, e) => StandbyAll());
+        m.Items.Add(Lang.T("Spegni schermi (standby, il mouse li riaccende)", "Turn screens off (standby, mouse wakes them)"), null, (s, e) => StandbyAll());
         int activeCount = mons.FindAll(x => x.Active).Count;
         foreach (var mon in mons)
         {
             var mm = mon;
             if (mm.Active)
             {
-                var off = m.Items.Add("Disattiva " + mm.Name + " (come scollegarlo)", null, (s, e) => Toggle(mm, false));
+                var off = m.Items.Add(Lang.T("Disattiva ", "Disable ") + mm.Name + Lang.T(" (come scollegarlo)", " (like unplugging it)"), null, (s, e) => Toggle(mm, false));
                 off.Enabled = activeCount > 1;
             }
-            else m.Items.Add("Riattiva " + mm.Name, null, (s, e) => Toggle(mm, true));
+            else m.Items.Add(Lang.T("Riattiva ", "Re-enable ") + mm.Name, null, (s, e) => Toggle(mm, true));
         }
         m.Items.Add(new ToolStripSeparator());
-        var auto = new ToolStripMenuItem("Avvia con Windows");
+        var auto = new ToolStripMenuItem(Lang.T("Avvia con Windows", "Start with Windows"));
         auto.Checked = AutostartOn();
         auto.Click += (s, e) => SetAutostart(!AutostartOn());
         m.Items.Add(auto);
-        m.Items.Add("Esci", null, (s, e) => { tray.Visible = false; Application.Exit(); });
+        m.Items.Add(Lang.T("Esci", "Exit"), null, (s, e) => { tray.Visible = false; Application.Exit(); });
     }
 
     public static void Log(Exception ex)
@@ -372,7 +378,7 @@ class App : ApplicationContext
         bool ok = false;
         try { ok = enable ? m.Enable() : m.Disable(); }
         catch (Exception ex) { Log(ex); }
-        if (!ok) tray.ShowBalloonTip(3000, "RefreshSwitch", "Operazione non riuscita su " + m.Name + ".", ToolTipIcon.Warning);
+        if (!ok) tray.ShowBalloonTip(3000, "RefreshSwitch", Lang.T("Operazione non riuscita su ", "Operation failed on ") + m.Name + ".", ToolTipIcon.Warning);
         Refresh();
     }
 
