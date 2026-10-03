@@ -4,8 +4,8 @@
 
 App per la tray di Windows per cambiare la frequenza di aggiornamento (Hz) di tutti i monitor e per spegnere i monitor senza scollegarli.
 
-- **Clic sinistro**: passa alla frequenza successiva su tutti i monitor
-- **Clic destro**: scegli una frequenza per tutti i monitor o per un singolo monitor, spegni gli schermi, disattiva/riattiva un monitor, avvio con Windows, Esci
+- **Cambia frequenza con un clic sull'icona** (disattivata di default): se la abiliti dal menu, il clic sinistro passa alla frequenza successiva su tutti i monitor; il menu resta disponibile con il clic destro
+- **Clic** sull'icona (sinistro o destro) per aprire il menu: scegli una frequenza per tutti i monitor o per un singolo monitor, spegni gli schermi, disattiva/riattiva un monitor, avvio con Windows, Esci
 - L'icona mostra gli Hz del monitor principale; il tooltip elenca tutti i monitor
 - I monitor sono mostrati con il nome reale del modello e il numero dello schermo
 - Non richiede privilegi di amministratore

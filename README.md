@@ -4,8 +4,8 @@ English | [Italiano](README.it.md)
 
 A Windows tray app to change the refresh rate (Hz) of all your monitors, and to turn monitors off without unplugging them.
 
-- **Left-click** the tray icon: switch to the next refresh rate on all monitors
-- **Right-click**: pick a rate for all monitors or for a single monitor, turn screens off, disable/re-enable a monitor, Start with Windows, Exit
+- **Change refresh rate by clicking the icon** (off by default): when enabled in the menu, a left-click switches to the next refresh rate on all monitors; the menu stays available with a right-click
+- **Click** the tray icon (left or right) to open the menu: pick a rate for all monitors or for a single monitor, turn screens off, disable/re-enable a monitor, Start with Windows, Exit
 - The icon shows the Hz of the primary monitor; the tooltip lists all monitors
 - Monitors are shown with their real model name, plus the display number
 - No administrator rights required

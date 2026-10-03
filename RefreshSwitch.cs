@@ -183,6 +183,20 @@ static class Settings
 {
     const string Key = @"Software\RefreshSwitch";
 
+    public static bool ClickCycle
+    {
+        get
+        {
+            try { using (var k = Registry.CurrentUser.OpenSubKey(Key)) return k != null && Convert.ToInt32(k.GetValue("ClickCycle", 0)) != 0; }
+            catch { return false; }
+        }
+        set
+        {
+            try { using (var k = Registry.CurrentUser.CreateSubKey(Key)) k.SetValue("ClickCycle", value ? 1 : 0, RegistryValueKind.DWord); }
+            catch { }
+        }
+    }
+
     public static int IconStyle
     {
         get
@@ -366,11 +380,23 @@ class App : ApplicationContext
                 tray.ContextMenuStrip.Items.Add(Lang.T("Esci", "Exit"), null, (s2, e2) => { tray.Visible = false; Application.Exit(); });
             }
         };
-        tray.MouseClick += (s, e) => { if (e.Button == MouseButtons.Left) Cycle(); };
+        tray.MouseClick += (s, e) =>
+        {
+            if (e.Button != MouseButtons.Left) return;
+            if (Settings.ClickCycle) Cycle();
+            else ShowMenu();
+        };
         timer.Interval = 4000;
         timer.Tick += (s, e) => Refresh();
         timer.Start();
         Refresh();
+    }
+
+    // opens the tray menu the same way a right-click does
+    void ShowMenu()
+    {
+        var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        if (mi != null) mi.Invoke(tray, null);
     }
 
     static List<uint> Union(List<Monitor> mons)
@@ -470,6 +496,10 @@ class App : ApplicationContext
         }
         m.Items.Add(Lang.T("Riattiva tutti i monitor (Estendi)", "Re-enable all monitors (Extend)"), null, (s, e) => EnableAll());
         m.Items.Add(new ToolStripSeparator());
+        var click = new ToolStripMenuItem(Lang.T("Cambia frequenza con un clic sull'icona", "Change refresh rate by clicking the icon"));
+        click.Checked = Settings.ClickCycle;
+        click.Click += (s, e) => { Settings.ClickCycle = !Settings.ClickCycle; };
+        m.Items.Add(click);
         var styles = new ToolStripMenuItem(Lang.T("Stile icona", "Icon style"));
         int current = Settings.IconStyle;
         for (int i = 0; i < Icons.Count; i++)
