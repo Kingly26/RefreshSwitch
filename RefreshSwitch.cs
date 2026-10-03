@@ -222,6 +222,8 @@ class App : ApplicationContext
         tray.ContextMenuStrip = new ContextMenuStrip();
         tray.ContextMenuStrip.Opening += (s, e) =>
         {
+            // an empty menu starts with Cancel = true, which would swallow the first click
+            e.Cancel = false;
             try { BuildMenu(tray.ContextMenuStrip); }
             catch (Exception ex)
             {
