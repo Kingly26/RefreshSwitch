@@ -45,6 +45,12 @@ static class Native
     public static extern int ChangeDisplaySettingsEx(string device, IntPtr dm, IntPtr hwnd, uint flags, IntPtr lParam);
     [DllImport("user32.dll")]
     public static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll")]
+    public static extern int SetDisplayConfig(uint numPaths, IntPtr paths, uint numModes, IntPtr modes, uint flags);
+    [DllImport("user32.dll")]
+    public static extern bool DestroyIcon(IntPtr h);
+
+    public const uint SDC_TOPOLOGY_EXTEND = 0x4, SDC_APPLY = 0x80;
 
     public const uint DM_POSITION = 0x20, DM_BITSPERPEL = 0x40000, DM_PELSWIDTH = 0x80000, DM_PELSHEIGHT = 0x100000;
     public const uint CDS_NORESET = 0x10000000;
@@ -105,8 +111,8 @@ class Monitor
         {
             var dd = new Native.DISPLAY_DEVICE(); dd.cb = Marshal.SizeOf(dd);
             if (!Native.EnumDisplayDevices(null, i, ref dd, 0)) break;
-            bool attached = (dd.StateFlags & Native.ATTACHED) != 0;
-            var m = new Monitor { Device = dd.DeviceName, Primary = (dd.StateFlags & Native.PRIMARY) != 0, Active = attached };
+            if ((dd.StateFlags & Native.ATTACHED) == 0) continue;
+            var m = new Monitor { Device = dd.DeviceName, Primary = (dd.StateFlags & Native.PRIMARY) != 0 };
             var mon = new Native.DISPLAY_DEVICE(); mon.cb = Marshal.SizeOf(mon);
             bool hasMon = Native.EnumDisplayDevices(dd.DeviceName, 0, ref mon, 0);
             string baseName = hasMon ? mon.DeviceString : dd.DeviceString;
@@ -118,12 +124,6 @@ class Monitor
             }
             string num = dd.DeviceName.StartsWith("\\\\.\\") ? dd.DeviceName.Substring(4) : dd.DeviceName;
             m.Name = (string.IsNullOrEmpty(friendly) ? baseName : friendly) + " [" + num.Replace("DISPLAY", Lang.T("Schermo ", "Display ")) + "]";
-            if (!attached)
-            {
-                // detached output: list it only if a monitor is still connected or we saved its mode
-                if (hasMon || LoadSaved(m.Device) != null) list.Add(m);
-                continue;
-            }
             var cur = NewMode();
             if (!Native.EnumDisplaySettings(m.Device, Native.ENUM_CURRENT_SETTINGS, ref cur)) continue;
             m.Current = cur.dmDisplayFrequency;
@@ -139,33 +139,11 @@ class Monitor
         return list;
     }
 
-    const string SaveKey = @"Software\RefreshSwitch";
-
-    static string KeyName(string device) { return device.Replace("\\", "_").Replace(".", ""); }
-
-    static uint[] LoadSaved(string device)
-    {
-        using (var k = Registry.CurrentUser.OpenSubKey(SaveKey))
-        {
-            if (k == null) return null;
-            var v = k.GetValue(KeyName(device)) as string;
-            if (v == null) return null;
-            var p = v.Split(',');
-            if (p.Length != 6) return null;
-            var r = new uint[6];
-            for (int i = 0; i < 6; i++) r[i] = unchecked((uint)int.Parse(p[i]));
-            return r;
-        }
-    }
-
     // detaches the monitor from the desktop (like unplugging it): windows move to the other screens
     public bool Disable()
     {
         var dm = NewMode();
         if (!Native.EnumDisplaySettings(Device, Native.ENUM_CURRENT_SETTINGS, ref dm)) return false;
-        using (var k = Registry.CurrentUser.CreateSubKey(SaveKey))
-            k.SetValue(KeyName(Device), string.Format("{0},{1},{2},{3},{4},{5}",
-                dm.dmPositionX, dm.dmPositionY, dm.dmPelsWidth, dm.dmPelsHeight, dm.dmBitsPerPel, dm.dmDisplayFrequency));
         dm.dmFields = Native.DM_POSITION | Native.DM_PELSWIDTH | Native.DM_PELSHEIGHT;
         dm.dmPelsWidth = 0; dm.dmPelsHeight = 0;
         int r = Native.ChangeDisplaySettingsEx(Device, ref dm, IntPtr.Zero, Native.CDS_UPDATEREGISTRY | Native.CDS_NORESET, IntPtr.Zero);
@@ -173,20 +151,11 @@ class Monitor
         return Native.ChangeDisplaySettingsEx(null, IntPtr.Zero, IntPtr.Zero, 0, IntPtr.Zero) == 0;
     }
 
-    public bool Enable()
+    // same as "Extend these displays" in Windows settings: brings back every connected monitor
+    // with the layout Windows remembers for this set of screens
+    public static bool ExtendAll()
     {
-        var s = LoadSaved(Device);
-        var dm = NewMode();
-        if (s != null)
-        {
-            dm.dmPositionX = unchecked((int)s[0]); dm.dmPositionY = unchecked((int)s[1]);
-            dm.dmPelsWidth = s[2]; dm.dmPelsHeight = s[3]; dm.dmBitsPerPel = s[4]; dm.dmDisplayFrequency = s[5];
-        }
-        else if (!Native.EnumDisplaySettings(Device, -2, ref dm)) return false; // ENUM_REGISTRY_SETTINGS
-        dm.dmFields = Native.DM_POSITION | Native.DM_PELSWIDTH | Native.DM_PELSHEIGHT | Native.DM_BITSPERPEL | Native.DM_DISPLAYFREQUENCY;
-        int r = Native.ChangeDisplaySettingsEx(Device, ref dm, IntPtr.Zero, Native.CDS_UPDATEREGISTRY | Native.CDS_NORESET, IntPtr.Zero);
-        if (r != 0) return false;
-        return Native.ChangeDisplaySettingsEx(null, IntPtr.Zero, IntPtr.Zero, 0, IntPtr.Zero) == 0;
+        return Native.SetDisplayConfig(0, IntPtr.Zero, 0, IntPtr.Zero, Native.SDC_TOPOLOGY_EXTEND | Native.SDC_APPLY) == 0;
     }
 
     // picks the requested rate, or the closest one this monitor supports
@@ -210,10 +179,174 @@ static class Lang
     public static string T(string it, string en) { return It ? it : en; }
 }
 
+static class Settings
+{
+    const string Key = @"Software\RefreshSwitch";
+
+    public static int IconStyle
+    {
+        get
+        {
+            try
+            {
+                using (var k = Registry.CurrentUser.OpenSubKey(Key))
+                {
+                    int s = k == null ? 0 : Convert.ToInt32(k.GetValue("IconStyle", 0));
+                    return s < 0 || s >= Icons.Count ? 0 : s;
+                }
+            }
+            catch { return 0; }
+        }
+        set
+        {
+            try { using (var k = Registry.CurrentUser.CreateSubKey(Key)) k.SetValue("IconStyle", value, RegistryValueKind.DWord); }
+            catch { }
+        }
+    }
+}
+
+static class Icons
+{
+    public const int Count = 7;
+    static readonly Color Solid = Color.FromArgb(30, 100, 190), Bright = Color.FromArgb(86, 180, 255);
+
+    public static string Name(int style)
+    {
+        switch (style)
+        {
+            case 0: return Lang.T("Cerchio pieno", "Filled circle");
+            case 1: return Lang.T("Quadrato arrotondato", "Rounded square");
+            case 2: return Lang.T("Riquadro (senza sfondo)", "Outline box (no background)");
+            case 3: return Lang.T("Numero colorato (senza sfondo)", "Colored number (no background)");
+            case 4: return Lang.T("Numero monocromatico (senza sfondo)", "Monochrome number (no background)");
+            case 5: return Lang.T("Numero con Hz (senza sfondo)", "Number with Hz (no background)");
+            default: return Lang.T("Colore in base agli Hz (senza sfondo)", "Color by refresh rate (no background)");
+        }
+    }
+
+    public static bool LightTaskbar()
+    {
+        try
+        {
+            using (var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
+                return k != null && Convert.ToInt32(k.GetValue("SystemUsesLightTheme", 0)) != 0;
+        }
+        catch { return false; }
+    }
+
+    // green from 120 Hz, yellow from 75 Hz, orange below
+    static Color RateColor(uint hz, bool light)
+    {
+        if (hz >= 120) return light ? Color.FromArgb(30, 140, 70) : Color.FromArgb(80, 220, 130);
+        if (hz >= 75) return light ? Color.FromArgb(160, 120, 0) : Color.FromArgb(250, 210, 70);
+        return light ? Color.FromArgb(200, 90, 20) : Color.FromArgb(255, 150, 70);
+    }
+
+    // draws s centered in the box, with the largest font (up to maxPx) that fits its width
+    static void Text(Graphics g, string s, RectangleF box, float maxPx, Color c)
+    {
+        using (var sf = new StringFormat(StringFormat.GenericTypographic))
+        {
+            sf.Alignment = StringAlignment.Center; sf.LineAlignment = StringAlignment.Center;
+            float px = maxPx;
+            using (var probe = new Font("Segoe UI", 100, FontStyle.Bold, GraphicsUnit.Pixel))
+            {
+                float w = g.MeasureString(s, probe, 1000, sf).Width;
+                if (w > 0) px = Math.Min(maxPx, box.Width * 100f / w);
+            }
+            using (var f = new Font("Segoe UI", px, FontStyle.Bold, GraphicsUnit.Pixel))
+            using (var b = new SolidBrush(c))
+                g.DrawString(s, f, b, box, sf);
+        }
+    }
+
+    static GraphicsPath RoundRect(float x, float y, float w, float h, float r)
+    {
+        var p = new GraphicsPath();
+        p.AddArc(x, y, r, r, 180, 90); p.AddArc(x + w - r, y, r, r, 270, 90);
+        p.AddArc(x + w - r, y + h - r, r, r, 0, 90); p.AddArc(x, y + h - r, r, r, 90, 90);
+        p.CloseFigure();
+        return p;
+    }
+
+    public static Bitmap Render(int style, uint hz, bool light)
+    {
+        var bmp = new Bitmap(32, 32);
+        using (var g = Graphics.FromImage(bmp))
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            string s = hz.ToString();
+            Color accent = light ? Solid : Bright, mono = light ? Color.FromArgb(30, 30, 30) : Color.White;
+            var full = new RectangleF(0, 0, 32, 32);
+            switch (style)
+            {
+                case 0:
+                    using (var b = new SolidBrush(Solid)) g.FillEllipse(b, 0, 0, 32, 32);
+                    Text(g, s, new RectangleF(4, 0, 24, 32), 18, Color.White);
+                    break;
+                case 1:
+                    using (var b = new SolidBrush(Solid)) using (var p = RoundRect(0, 3, 32, 26, 10)) g.FillPath(b, p);
+                    Text(g, s, new RectangleF(2, 0, 28, 32), 20, Color.White);
+                    break;
+                case 2:
+                    using (var pen = new Pen(accent, 2f)) using (var p = RoundRect(1, 4, 30, 24, 9)) g.DrawPath(pen, p);
+                    Text(g, s, new RectangleF(4, 0, 24, 32), 18, accent);
+                    break;
+                case 3: Text(g, s, full, 28, accent); break;
+                case 4: Text(g, s, full, 28, mono); break;
+                case 5:
+                    Text(g, s, new RectangleF(0, -1, 32, 22), 22, mono);
+                    Text(g, "Hz", new RectangleF(0, 18, 32, 14), 13, accent);
+                    break;
+                default: Text(g, s, full, 28, RateColor(hz, light)); break;
+            }
+        }
+        return bmp;
+    }
+
+    // contact sheet of every style at a few refresh rates, on a dark and a light taskbar
+    public static void SavePreview(string path)
+    {
+        const int cell = 56, labelW = 310, pad = 12;
+        uint[] rates = { 60, 75, 144, 240 };
+        int w = labelW + cell * 8 + pad * 3, h = pad * 2 + 28 + cell * Count;
+        using (var bmp = new Bitmap(w, h))
+        using (var g = Graphics.FromImage(bmp))
+        using (var f = new Font("Segoe UI", 15, FontStyle.Regular, GraphicsUnit.Pixel))
+        {
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.Clear(Color.FromArgb(250, 250, 250));
+            int xDark = labelW + pad, xLight = xDark + cell * 4 + pad, y0 = pad + 28;
+            using (var d = new SolidBrush(Color.FromArgb(32, 32, 32))) g.FillRectangle(d, xDark, y0, cell * 4, cell * Count);
+            using (var l = new SolidBrush(Color.FromArgb(238, 238, 238))) g.FillRectangle(l, xLight, y0, cell * 4, cell * Count);
+            for (int c = 0; c < 4; c++)
+            {
+                g.DrawString(rates[c] + " Hz", f, Brushes.Black, xDark + c * cell + 2, pad);
+                g.DrawString(rates[c] + " Hz", f, Brushes.Black, xLight + c * cell + 2, pad);
+            }
+            for (int s = 0; s < Count; s++)
+            {
+                int y = y0 + s * cell;
+                g.DrawString((s + 1) + ". " + Name(s), f, Brushes.Black, pad, y + 18);
+                for (int c = 0; c < 4; c++)
+                {
+                    using (var a = Render(s, rates[c], false)) g.DrawImageUnscaled(a, xDark + c * cell + 12, y + 12);
+                    using (var b = Render(s, rates[c], true)) g.DrawImageUnscaled(b, xLight + c * cell + 12, y + 12);
+                }
+            }
+            bmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+        }
+    }
+}
+
 class App : ApplicationContext
 {
     NotifyIcon tray = new NotifyIcon();
     Timer timer = new Timer();
+    IntPtr iconHandle = IntPtr.Zero;
+    string iconKey = "";
+    uint shownHz = 0;
     const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
     public App()
@@ -280,30 +413,25 @@ class App : ApplicationContext
                 if (m.Primary || shown == 0) shown = m.Current;
                 tip += (tip.Length > 0 ? "\n" : "") + m.Name + ": " + m.Current + " Hz";
             }
-            var old = tray.Icon;
-            tray.Icon = MakeIcon(shown.ToString());
-            if (old != null) old.Dispose();
+            shownHz = shown;
+            UpdateIcon();
             tray.Text = (tip.Length > 63 ? tip.Substring(0, 63) : tip);
         }
         catch { }
     }
 
-    static Icon MakeIcon(string text)
+    void UpdateIcon()
     {
-        using (var bmp = new Bitmap(32, 32))
-        using (var g = Graphics.FromImage(bmp))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
-            using (var b = new SolidBrush(Color.FromArgb(30, 100, 190))) g.FillEllipse(b, 1, 1, 30, 30);
-            float size = text.Length >= 3 ? 14 : 18;
-            using (var f = new Font("Segoe UI", size, FontStyle.Bold, GraphicsUnit.Pixel))
-            {
-                var sz = g.MeasureString(text, f);
-                g.DrawString(text, f, Brushes.White, (32 - sz.Width) / 2 + 0.5f, (32 - sz.Height) / 2 + 1);
-            }
-            return Icon.FromHandle(bmp.GetHicon());
-        }
+        int style = Settings.IconStyle;
+        bool light = Icons.LightTaskbar();
+        string key = style + "/" + shownHz + "/" + light;
+        if (key == iconKey) return;
+        IntPtr h;
+        using (var bmp = Icons.Render(style, shownHz, light)) h = bmp.GetHicon();
+        tray.Icon = Icon.FromHandle(h);
+        if (iconHandle != IntPtr.Zero) Native.DestroyIcon(iconHandle);
+        iconHandle = h;
+        iconKey = key;
     }
 
     void BuildMenu(ContextMenuStrip m)
@@ -337,14 +465,22 @@ class App : ApplicationContext
         foreach (var mon in mons)
         {
             var mm = mon;
-            if (mm.Active)
-            {
-                var off = m.Items.Add(Lang.T("Disattiva ", "Disable ") + mm.Name + Lang.T(" (come scollegarlo)", " (like unplugging it)"), null, (s, e) => Toggle(mm, false));
-                off.Enabled = activeCount > 1;
-            }
-            else m.Items.Add(Lang.T("Riattiva ", "Re-enable ") + mm.Name, null, (s, e) => Toggle(mm, true));
+            var off = m.Items.Add(Lang.T("Disattiva ", "Disable ") + mm.Name + Lang.T(" (come scollegarlo)", " (like unplugging it)"), null, (s, e) => Disable(mm));
+            off.Enabled = activeCount > 1;
         }
+        m.Items.Add(Lang.T("Riattiva tutti i monitor (Estendi)", "Re-enable all monitors (Extend)"), null, (s, e) => EnableAll());
         m.Items.Add(new ToolStripSeparator());
+        var styles = new ToolStripMenuItem(Lang.T("Stile icona", "Icon style"));
+        int current = Settings.IconStyle;
+        for (int i = 0; i < Icons.Count; i++)
+        {
+            int style = i;
+            var it = new ToolStripMenuItem(Icons.Name(style), Icons.Render(style, shownHz, true));
+            it.Checked = style == current;
+            it.Click += (s, e) => { Settings.IconStyle = style; UpdateIcon(); };
+            styles.DropDownItems.Add(it);
+        }
+        m.Items.Add(styles);
         var auto = new ToolStripMenuItem(Lang.T("Avvia con Windows", "Start with Windows"));
         auto.Checked = AutostartOn();
         auto.Click += (s, e) => SetAutostart(!AutostartOn());
@@ -375,12 +511,21 @@ class App : ApplicationContext
         t.Start();
     }
 
-    void Toggle(Monitor m, bool enable)
+    void Disable(Monitor m)
     {
         bool ok = false;
-        try { ok = enable ? m.Enable() : m.Disable(); }
+        try { ok = m.Disable(); }
         catch (Exception ex) { Log(ex); }
         if (!ok) tray.ShowBalloonTip(3000, "RefreshSwitch", Lang.T("Operazione non riuscita su ", "Operation failed on ") + m.Name + ".", ToolTipIcon.Warning);
+        Refresh();
+    }
+
+    void EnableAll()
+    {
+        bool ok = false;
+        try { ok = Monitor.ExtendAll(); }
+        catch (Exception ex) { Log(ex); }
+        if (!ok) tray.ShowBalloonTip(3000, "RefreshSwitch", Lang.T("Non sono riuscito a riattivare i monitor.", "Could not re-enable the monitors."), ToolTipIcon.Warning);
         Refresh();
     }
 
@@ -401,8 +546,9 @@ class App : ApplicationContext
 static class Program
 {
     [STAThread]
-    static void Main()
+    static void Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--preview") { Icons.SavePreview(args[1]); return; }
         bool created;
         using (var mtx = new System.Threading.Mutex(true, "RefreshSwitchSingleton", out created))
         {

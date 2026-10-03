@@ -16,7 +16,14 @@ Se un monitor non supporta la frequenza richiesta, usa la più vicina tra quelle
 ## Spegnere i monitor
 
 - **Spegni schermi**: mette tutti i monitor in standby; si riaccendono muovendo il mouse o premendo un tasto.
-- **Disattiva [monitor]**: stacca il monitor dal desktop, come scollegare il cavo (le finestre si spostano sugli altri schermi). Con **Riattiva [monitor]** lo riporti com'era: posizione, risoluzione e Hz vengono salvati e ripristinati. L'ultimo monitor attivo non può essere disattivato.
+- **Disattiva [monitor]**: stacca il monitor dal desktop, come scollegare il cavo (le finestre si spostano sugli altri schermi). L'ultimo monitor attivo non può essere disattivato.
+- **Riattiva tutti i monitor (Estendi)**: fa la stessa cosa di "Estendi questi schermi" nelle impostazioni di Windows, quindi ogni monitor collegato torna con la disposizione che Windows ricorda.
+
+## Stili dell'icona
+
+Sette stili, selezionabili dal menu, mostrati qui su barra scura e chiara. Quelli monocromatici seguono il tema di Windows.
+
+![Stili icona](icon-styles.png)
 
 Gli errori vengono salvati in `%LOCALAPPDATA%\RefreshSwitch\error.log`.
 

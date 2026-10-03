@@ -16,7 +16,14 @@ If a monitor does not support the requested rate, the closest one available at i
 ## Turning monitors off
 
 - **Turn screens off**: puts all monitors in standby; moving the mouse or pressing a key wakes them.
-- **Disable [monitor]**: detaches the monitor from the desktop, like unplugging the cable (windows move to the other screens). Use **Re-enable [monitor]** to bring it back; its position, resolution and refresh rate are saved and restored. The last active monitor cannot be disabled.
+- **Disable [monitor]**: detaches the monitor from the desktop, like unplugging the cable (windows move to the other screens). The last active monitor cannot be disabled.
+- **Re-enable all monitors (Extend)**: does the same as "Extend these displays" in Windows settings, so every connected monitor comes back with the layout Windows remembers.
+
+## Icon styles
+
+Seven styles, selectable from the menu, shown here on a dark and a light taskbar. The monochrome ones follow the Windows theme.
+
+![Icon styles](icon-styles.png)
 
 Errors are logged to `%LOCALAPPDATA%\RefreshSwitch\error.log`.
 
