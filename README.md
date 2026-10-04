@@ -21,7 +21,7 @@ If a monitor does not support the requested rate, the closest one available at i
 
 ## Icon styles
 
-Seven styles, selectable from the menu, shown here on a dark and a light taskbar. The monochrome ones follow the Windows theme.
+Ten styles, selectable from the menu, shown here on a dark and a light taskbar. The monochrome ones follow the Windows theme. The gothic numbers are drawn by the app itself (a calligraphy nib swept along each digit).
 
 ![Icon styles](icon-styles.png)
 
@@ -30,5 +30,5 @@ Errors are logged to `%LOCALAPPDATA%\RefreshSwitch\error.log`.
 ## Build
 
 ```
-C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -out:RefreshSwitch.exe -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Management.dll RefreshSwitch.cs
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -out:RefreshSwitch.exe -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Management.dll RefreshSwitch.cs Gothic.cs
 ```

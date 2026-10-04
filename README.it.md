@@ -21,7 +21,7 @@ Se un monitor non supporta la frequenza richiesta, usa la più vicina tra quelle
 
 ## Stili dell'icona
 
-Sette stili, selezionabili dal menu, mostrati qui su barra scura e chiara. Quelli monocromatici seguono il tema di Windows.
+Dieci stili, selezionabili dal menu, mostrati qui su barra scura e chiara. Quelli monocromatici seguono il tema di Windows. I numeri gotici sono disegnati dall'app stessa (un pennino da calligrafia fatto scorrere lungo ogni cifra).
 
 ![Stili icona](icon-styles.png)
 
@@ -30,5 +30,5 @@ Gli errori vengono salvati in `%LOCALAPPDATA%\RefreshSwitch\error.log`.
 ## Compilazione
 
 ```
-C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -out:RefreshSwitch.exe -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Management.dll RefreshSwitch.cs
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -out:RefreshSwitch.exe -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Management.dll RefreshSwitch.cs Gothic.cs
 ```

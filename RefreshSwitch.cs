@@ -221,7 +221,7 @@ static class Settings
 
 static class Icons
 {
-    public const int Count = 7;
+    public const int Count = 10, FirstGothic = 7;
     static readonly Color Solid = Color.FromArgb(30, 100, 190), Bright = Color.FromArgb(86, 180, 255);
 
     public static string Name(int style)
@@ -234,7 +234,10 @@ static class Icons
             case 3: return Lang.T("Numero colorato (senza sfondo)", "Colored number (no background)");
             case 4: return Lang.T("Numero monocromatico (senza sfondo)", "Monochrome number (no background)");
             case 5: return Lang.T("Numero con Hz (senza sfondo)", "Number with Hz (no background)");
-            default: return Lang.T("Colore in base agli Hz (senza sfondo)", "Color by refresh rate (no background)");
+            case 6: return Lang.T("Colore in base agli Hz (senza sfondo)", "Color by refresh rate (no background)");
+            case 7: return Lang.T("Gotico", "Gothic");
+            case 8: return Lang.T("Gotico con spine", "Gothic with thorns");
+            default: return Lang.T("Gotico rosso", "Gothic red");
         }
     }
 
@@ -313,7 +316,10 @@ static class Icons
                     Text(g, s, new RectangleF(0, -1, 32, 22), 22, mono);
                     Text(g, "Hz", new RectangleF(0, 18, 32, 14), 13, accent);
                     break;
-                default: Text(g, s, full, 28, RateColor(hz, light)); break;
+                case 6: Text(g, s, full, 28, RateColor(hz, light)); break;
+                case 7: Gothic.Draw(g, s, full, mono, false); break;
+                case 8: Gothic.Draw(g, s, full, mono, true); break;
+                default: Gothic.Draw(g, s, full, light ? Color.FromArgb(190, 25, 35) : Color.FromArgb(225, 40, 45), true); break;
             }
         }
         return bmp;
@@ -505,6 +511,7 @@ class App : ApplicationContext
         for (int i = 0; i < Icons.Count; i++)
         {
             int style = i;
+            if (style == Icons.FirstGothic) styles.DropDownItems.Add(new ToolStripSeparator());
             var it = new ToolStripMenuItem(Icons.Name(style), Icons.Render(style, shownHz, true));
             it.Checked = style == current;
             it.Click += (s, e) => { Settings.IconStyle = style; UpdateIcon(); };
