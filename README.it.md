@@ -13,6 +13,14 @@ App per la tray di Windows per cambiare la frequenza di aggiornamento (Hz) di tu
 
 Se un monitor non supporta la frequenza richiesta, usa la più vicina tra quelle disponibili alla sua risoluzione attuale.
 
+## A chi serve
+
+Consiglio RefreshSwitch a chi ha bisogno di scollegare un monitor come se staccasse fisicamente il cavo, ma senza toccarlo.
+
+Un esempio è guardare Netflix in 4K da Microsoft Edge (serve un'estensione del browser): un secondo schermo collegato al PC può essere d'intralcio, e di solito la soluzione è staccarlo. Con **Disattiva [monitor]** lo schermo esce dal desktop allo stesso modo, e con **Riattiva tutti i monitor** torna al suo posto quando hai finito.
+
+È comodo anche se cambi spesso frequenza di aggiornamento, per esempio alta per i giochi e più bassa per consumare meno o per adattarla a un video.
+
 ## Spegnere i monitor
 
 - **Spegni schermi**: mette tutti i monitor in standby; si riaccendono muovendo il mouse o premendo un tasto.

@@ -13,6 +13,14 @@ A Windows tray app to change the refresh rate (Hz) of all your monitors, and to 
 
 If a monitor does not support the requested rate, the closest one available at its current resolution is used.
 
+## Who it is for
+
+I recommend RefreshSwitch to anyone who needs to disconnect a monitor as if the cable were physically unplugged, without touching it.
+
+One example is watching Netflix in 4K from Microsoft Edge (a browser extension is required): a second screen attached to the PC can get in the way, and the usual fix is to unplug it. With **Disable [monitor]** the screen leaves the desktop the same way, and **Re-enable all monitors** brings it back when you are done.
+
+It is also handy if you often change refresh rate, for example a high rate for games and a lower one to save power or to match a video.
+
 ## Turning monitors off
 
 - **Turn screens off**: puts all monitors in standby; moving the mouse or pressing a key wakes them.
