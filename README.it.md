@@ -35,7 +35,25 @@ Dieci stili, selezionabili dal menu, mostrati qui su barra scura e chiara. Quell
 
 Gli errori vengono salvati in `%LOCALAPPDATA%\RefreshSwitch\error.log`.
 
-## Compilazione
+## Come ottenere l'app (senza saper programmare)
+
+Non devi installare nulla: l'app si crea con uno strumento già presente in Windows 10 e 11.
+
+1. In cima a questa pagina clicca il pulsante verde **Code**, poi **Download ZIP**.
+2. Apri la cartella Download, fai clic destro sul file ZIP e scegli **Estrai tutto...**, poi **Estrai**.
+3. Apri la cartella estratta e fai doppio clic su **`build.bat`** (può comparire solo come `build`).
+   - Se appare una finestra blu "PC protetto da Windows", clicca **Ulteriori informazioni** e poi **Esegui comunque**. Compare perché il file è stato scaricato da internet.
+4. Si apre una finestra nera che dopo un attimo scrive **Fatto**. Premi un tasto per chiuderla.
+5. Nella stessa cartella ora c'è **`RefreshSwitch.exe`**: fai doppio clic per avviare l'app. Non serve il permesso di amministratore.
+6. L'icona compare nella tray, accanto all'orologio. Se non la vedi, clicca la freccetta **^**; puoi trascinare l'icona sulla barra per averla sempre in vista.
+
+Per avviarla in automatico, clicca l'icona e spunta **Avvia con Windows**. Prima puoi spostare la cartella dove preferisci: se la sposti dopo, togli e rimetti la spunta.
+
+Per aggiornare, scarica di nuovo lo ZIP e ripeti i passaggi. Prima chiudi l'app (clic sull'icona, poi **Esci**), altrimenti il file non può essere sostituito.
+
+### Da riga di comando
+
+Se preferisci, questo è il comando che `build.bat` esegue:
 
 ```
 C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -out:RefreshSwitch.exe -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Management.dll RefreshSwitch.cs Gothic.cs

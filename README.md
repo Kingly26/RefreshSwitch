@@ -35,7 +35,25 @@ Ten styles, selectable from the menu, shown here on a dark and a light taskbar. 
 
 Errors are logged to `%LOCALAPPDATA%\RefreshSwitch\error.log`.
 
-## Build
+## How to get the app (no programming needed)
+
+You do not need to install anything: the app is built with a tool that is already part of Windows 10 and 11.
+
+1. At the top of this page click the green **Code** button, then **Download ZIP**.
+2. Open your Downloads folder, right-click the ZIP file and choose **Extract All...**, then **Extract**.
+3. Open the extracted folder and double-click **`build.bat`** (it may show simply as `build`).
+   - If a blue "Windows protected your PC" window appears, click **More info**, then **Run anyway**. It appears because the file was downloaded from the internet.
+4. A black window opens and after a moment says **Done**. Press any key to close it.
+5. In the same folder there is now **`RefreshSwitch.exe`**: double-click it to start the app. No administrator permission is needed.
+6. The icon appears in the tray, next to the clock. If you do not see it, click the small **^** arrow; you can drag the icon onto the taskbar to keep it always visible.
+
+To start it automatically, click the icon and tick **Start with Windows**. You can move the folder wherever you like first: if you move it afterwards, untick and tick the option again.
+
+To update, download the ZIP again and repeat the steps. Close the app first (click the icon, then **Exit**), or the build cannot replace the file.
+
+### From the command line
+
+If you prefer, this is the command that `build.bat` runs:
 
 ```
 C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -out:RefreshSwitch.exe -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Management.dll RefreshSwitch.cs Gothic.cs
