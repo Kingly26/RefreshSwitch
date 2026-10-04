@@ -58,3 +58,7 @@ If you prefer, this is the command that `build.bat` runs:
 ```
 C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -out:RefreshSwitch.exe -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Management.dll RefreshSwitch.cs Gothic.cs
 ```
+
+## License
+
+Released under the [MIT license](LICENSE). Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
