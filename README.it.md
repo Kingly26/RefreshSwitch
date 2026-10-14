@@ -35,7 +35,22 @@ Dieci stili, selezionabili dal menu, mostrati qui su barra scura e chiara. Quell
 
 Gli errori vengono salvati in `%LOCALAPPDATA%\RefreshSwitch\error.log`.
 
-## Come ottenere l'app (senza saper programmare)
+## Download
+
+**[Scarica RefreshSwitch.exe](https://github.com/Kingly26/RefreshSwitch/releases/latest/download/RefreshSwitch.exe)**: l'ultima versione, pronta all'uso. Non c'è nulla da installare.
+
+1. Clicca il link qui sopra e salva il file dove vuoi tenerlo, per esempio in una cartella tutta sua in Documenti.
+2. Fai doppio clic sul file per avviare l'app.
+   - Se appare una finestra blu "PC protetto da Windows", clicca **Ulteriori informazioni** e poi **Esegui comunque**. Compare perché l'app non ha una firma digitale, come capita spesso con i piccoli programmi gratuiti.
+3. L'icona compare nella tray, accanto all'orologio. Se non la vedi, clicca la freccetta **^**; puoi trascinare l'icona sulla barra per averla sempre in vista.
+
+Per avviarla in automatico, clicca l'icona e spunta **Avvia con Windows**. Per aggiornare, chiudi l'app (clic sull'icona, poi **Esci**), scarica di nuovo il file e sostituisci quello vecchio.
+
+Le versioni precedenti sono nella [pagina Releases](https://github.com/Kingly26/RefreshSwitch/releases).
+
+## Crearla da soli (senza saper programmare)
+
+Se preferisci non eseguire un programma scaricato, puoi creare l'app tu stesso dal codice sorgente di questa pagina.
 
 Non devi installare nulla: l'app si crea con uno strumento già presente in Windows 10 e 11.
 
