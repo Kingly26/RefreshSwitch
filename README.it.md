@@ -61,4 +61,4 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nologo -target:winexe -
 
 ## Licenza
 
-Rilasciata con [licenza MIT](LICENSE). I contributi sono benvenuti: vedi [CONTRIBUTING.md](CONTRIBUTING.md) (in inglese).
+Rilasciata con [licenza MIT](LICENSE). I contributi sono benvenuti: vedi [CONTRIBUTING.md](CONTRIBUTING.md) (in inglese). Le note su uso da tastiera, lettori di schermo e leggibilità delle icone sono in [ACCESSIBILITY.md](ACCESSIBILITY.md) (in inglese).
